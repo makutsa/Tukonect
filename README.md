@@ -535,3 +535,7 @@ For support or questions:
 **Built with ❤️ for students, by students**
 
 *Tukonect - Connecting Students, Building Futures* 🎓✨
+=======
+# Tukonect
+Tukonect is a Django-based social networking platform designed for students and alumni. It enables users to create accounts, build profiles, connect with peers, and engage with their school community. The system supports features such as posting updates, managing connections, and fostering collaboration between current students and graduates
+ 83a04f05e75e6d8df74a776f42f720e89491e8bb
