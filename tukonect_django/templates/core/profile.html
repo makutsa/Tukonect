@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }}'s Profile - Tukonect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Profile Header -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <img src="{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                             class="rounded-circle mb-3" width="120" height="120" alt="Profile Picture">
+                        {% if profile_user == user %}
+                        <div class="d-grid">
+                            <a href="{% url 'edit_profile' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>Edit Profile
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="d-grid gap-2">
+                            <!-- Connection Status Logic -->
+                            {% if connection_status == 'connected' %}
+                                <span class="btn btn-success btn-sm disabled">
+                                    <i class="fas fa-user-check me-1"></i>Connected
+                                </span>
+                                <a href="{% url 'message_detail' profile_user.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-envelope me-1"></i>Message
+                                </a>
+                                <a href="{% url 'unfriend_connection' connection_obj.id %}" class="btn btn-outline-danger btn-sm btn-unfriend" 
+                                   onclick="return confirm('Are you sure you want to unfriend {{ profile_user.username }}? This will remove the connection permanently.')">
+                                    <i class="fas fa-user-times me-1"></i>Unfriend
+                                </a>
+                            {% elif connection_status == 'pending_sent' %}
+                                <span class="btn btn-warning btn-sm disabled">
+                                    <i class="fas fa-clock me-1"></i>Request Sent
+                                </span>
+                                <a href="{% url 'message_detail' profile_user.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-envelope me-1"></i>Message
+                                </a>
+                            {% elif connection_status == 'pending_received' %}
+                                <a href="{% url 'accept_connection' connection_obj.id %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-1"></i>Accept Request
+                                </a>
+                                <a href="{% url 'reject_connection' connection_obj.id %}" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-times me-1"></i>Reject Request
+                                </a>
+                            {% elif connection_status == 'rejected' %}
+                                <span class="btn btn-outline-secondary btn-sm disabled">
+                                    <i class="fas fa-user-times me-1"></i>Request Rejected
+                                </span>
+                            {% elif connection_status == 'blocked' %}
+                                <span class="btn btn-outline-danger btn-sm disabled">
+                                    <i class="fas fa-ban me-1"></i>Blocked
+                                </span>
+                            {% else %}
+                                <a href="{% url 'send_connection_request' profile_user.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-user-plus me-1"></i>Send Request
+                                </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <h2 class="mb-1">{{ profile.full_name|default:profile_user.username }}</h2>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-user me-1"></i>
+                            {% if profile.user_type %}
+                                {{ profile.user_type|title }}
+                            {% else %}
+                                Student
+                            {% endif %}
+                            {% if profile.major %}
+                                • {{ profile.major }}
+                            {% endif %}
+                        </p>
+                        {% if profile.course %}
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-graduation-cap me-1"></i>{{ profile.course }}
+                            {% if profile.graduation_year %}
+                                ({{ profile.graduation_year }})
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        {% if profile.location %}
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ profile.location }}
+                        </p>
+                        {% endif %}
+                        {% if profile.phone_number %}
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-phone me-1"></i>{{ profile.phone_number }}
+                        </p>
+                        {% endif %}
+                        <p class="text-muted small">
+                            <i class="fas fa-calendar me-1"></i>
+                            Joined {{ profile.created_at|date:"F Y" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bio Section -->
+        {% if profile.bio %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-circle me-2"></i>About
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ profile.bio|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Skills Section -->
+        {% if profile.skills %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>Skills
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for skill in profile.get_skills_list %}
+                    <span class="badge bg-primary me-2 mb-2">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Activity tracking coming soon</h6>
+                    <p class="text-muted small">We're working on showing recent forum posts, connections, and other activities.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Quick Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ profile_user.sent_connections.count|add:profile_user.received_connections.count }}</h4>
+                        <small class="text-muted">Connections</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ profile_user.forum_posts.count }}</h4>
+                        <small class="text-muted">Forum Posts</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-info">{{ profile_user.sent_messages.count|add:profile_user.received_messages.count }}</h4>
+                        <small class="text-muted">Messages</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ profile_user.event_participations.count }}</h4>
+                        <small class="text-muted">Events</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-address-book me-2"></i>Contact
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Username:</strong> {{ profile_user.username }}
+                </div>
+                {% if profile_user.email %}
+                <div class="mb-2">
+                    <strong>Email:</strong> {{ profile_user.email }}
+                </div>
+                {% endif %}
+                {% if profile.phone_number %}
+                <div class="mb-2">
+                    <strong>Phone:</strong> {{ profile.phone_number }}
+                </div>
+                {% endif %}
+                {% if profile.location %}
+                <div class="mb-2">
+                    <strong>Location:</strong> {{ profile.location }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Academic Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i>Academic Info
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if profile.user_type %}
+                <div class="mb-2">
+                    <strong>Type:</strong> {{ profile.user_type|title }}
+                </div>
+                {% endif %}
+                {% if profile.major %}
+                <div class="mb-2">
+                    <strong>Major:</strong> {{ profile.major }}
+                </div>
+                {% endif %}
+                {% if profile.course %}
+                <div class="mb-2">
+                    <strong>Course:</strong> {{ profile.course }}
+                </div>
+                {% endif %}
+                {% if profile.graduation_year %}
+                <div class="mb-2">
+                    <strong>Graduation Year:</strong> {{ profile.graduation_year }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Mutual Connections -->
+        {% if profile_user != user %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Mutual Connections
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-3">
+                    <i class="fas fa-user-friends fa-2x text-muted mb-2"></i>
+                    <p class="text-muted small">Mutual connections feature coming soon</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any interactive features here
+    console.log('Profile page loaded');
+});
+</script>
+{% endblock %}
+

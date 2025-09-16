@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error - Tukonect{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body py-5">
+                    <i class="fas fa-exclamation-circle fa-5x text-danger mb-4"></i>
+                    <h1 class="display-4">500</h1>
+                    <h2 class="mb-3">Server Error</h2>
+                    <p class="text-muted mb-4">
+                        Something went wrong on our end. Please try again later.
+                    </p>
+                    <a href="{{ url_for('home') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-1"></i>Go Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

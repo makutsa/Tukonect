@@ -1,0 +1,437 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Tukonect{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-8">
+        {% if current_user.is_authenticated %}
+        <!-- Welcome Message -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title">
+                    <i class="fas fa-home text-primary me-2"></i>
+                    Welcome back, {{ current_user.profile.full_name or current_user.username }}!
+                </h2>
+                <p class="card-text">Stay connected with your academic community.</p>
+            </div>
+        </div>
+
+        <!-- Recent Forum Posts -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-comments text-primary me-2"></i>
+                    Recent Forum Discussions
+                </h5>
+                <a href="{{ url_for('forum_list') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_forums %}
+                    {% for forum in recent_forums %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <img src="{% if forum.author.profile.profile_picture %}{{ url_for('static', filename='uploads/' + forum.author.profile.profile_picture) }}{% else %}{{ url_for('static', filename='images/default-avatar.png') }}{% endif %}" 
+                                 class="rounded-circle" width="40" height="40" alt="Avatar">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('forum_detail', forum_id=forum.id) }}" class="text-decoration-none">
+                                    {{ forum.title }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-1">
+                                by {{ forum.author.username }} • {{ forum.created_at.strftime('%b %d, %Y') }}
+                            </p>
+                            <p class="mb-0">{{ forum.content[:100] }}...</p>
+                        </div>
+                    </div>
+                    {% if not loop.last %}<hr>{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent forum posts.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Jobs -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-briefcase text-success me-2"></i>
+                    Latest Job Opportunities
+                </h5>
+                <a href="{{ url_for('jobs_list') }}" class="btn btn-sm btn-outline-success">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_jobs %}
+                    {% for job in recent_jobs %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-briefcase text-success fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('job_detail', job_id=job.id) }}" class="text-decoration-none">
+                                    {{ job.title }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-1">
+                                {{ job.company }} • {{ job.location }} • {{ job.job_type.title() }}
+                            </p>
+                            <p class="mb-0">{{ job.description[:100] }}...</p>
+                        </div>
+                    </div>
+                    {% if not loop.last %}<hr>{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent job postings.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Hero Section for Non-Authenticated Users -->
+        <div class="hero-section bg-gradient-primary text-white rounded p-5 mb-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-graduation-cap me-3"></i>
+                Welcome to Tukonect
+            </h1>
+                    <p class="lead mb-4">The ultimate student networking platform where academic dreams meet professional opportunities. Connect, collaborate, and conquer your career goals together.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a class="btn btn-light btn-lg px-4" href="{{ url_for('register') }}" role="button">
+                            <i class="fas fa-rocket me-2"></i>Start Your Journey
+                        </a>
+                        <a class="btn btn-outline-light btn-lg px-4" href="{{ url_for('login') }}" role="button">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <i class="fas fa-users fa-10x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- What We Do Section -->
+        <div class="card mb-5">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0 text-center">
+                    <i class="fas fa-star me-2"></i>What We Do
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                            <h5>Connect</h5>
+                            <p class="text-muted">Build meaningful relationships with students, alumni, and industry professionals. Expand your network and create lasting connections.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="text-center">
+                            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-comments fa-2x"></i>
+                            </div>
+                            <h5>Collaborate</h5>
+                            <p class="text-muted">Share knowledge, ask questions, and learn from peers in our vibrant discussion forums. Every voice matters here.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="text-center">
+                            <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-briefcase fa-2x"></i>
+                            </div>
+                            <h5>Career Growth</h5>
+                            <p class="text-muted">Discover exclusive job opportunities, internships, and career guidance. Take the next step in your professional journey.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="text-center">
+                            <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-calendar fa-2x"></i>
+                            </div>
+                            <h5>Events & Learning</h5>
+                            <p class="text-muted">Attend workshops, networking events, and skill-building sessions. Never stop growing and learning.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row mb-5">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="fas fa-graduation-cap text-primary me-2"></i>
+                            Academic Excellence
+                        </h4>
+                        <p class="card-text">Join study groups, share resources, and collaborate on projects with students from your field and beyond.</p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Study group formation</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Resource sharing</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Peer tutoring</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Academic discussions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="fas fa-chart-line text-success me-2"></i>
+                            Professional Development
+                        </h4>
+                        <p class="card-text">Build your professional profile, showcase your skills, and connect with mentors who can guide your career path.</p>
+            <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Professional profiles</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Mentorship programs</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Skill showcases</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Career guidance</li>
+            </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Community Stats -->
+        <div class="card mb-5">
+            <div class="card-header bg-gradient-info text-white">
+                <h3 class="mb-0 text-center">
+                    <i class="fas fa-chart-bar me-2"></i>Our Growing Community
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="bg-primary text-white rounded p-3">
+                            <h2 class="mb-1">500+</h2>
+                            <p class="mb-0">Active Students</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="bg-success text-white rounded p-3">
+                            <h2 class="mb-1">200+</h2>
+                            <p class="mb-0">Alumni Network</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="bg-info text-white rounded p-3">
+                            <h2 class="mb-1">50+</h2>
+                            <p class="mb-0">Job Postings</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="bg-warning text-white rounded p-3">
+                            <h2 class="mb-1">25+</h2>
+                            <p class="mb-0">Events Monthly</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="card bg-gradient-success text-white">
+            <div class="card-body text-center p-5">
+                <h2 class="mb-3">Ready to Transform Your Academic Journey?</h2>
+                <p class="lead mb-4">Join thousands of students who are already building their future with Tukonect. Your next opportunity is just a connection away.</p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a class="btn btn-light btn-lg px-5" href="{{ url_for('register') }}" role="button">
+                        <i class="fas fa-user-plus me-2"></i>Join Now - It's Free!
+                    </a>
+                    <a class="btn btn-outline-light btn-lg px-5" href="{{ url_for('login') }}" role="button">
+                        <i class="fas fa-sign-in-alt me-2"></i>Already a Member?
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        {% if current_user.is_authenticated %}
+        <!-- Upcoming Events -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar text-info me-2"></i>
+                    Upcoming Events
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_events %}
+                    {% for event in upcoming_events %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-calendar-alt text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="text-decoration-none">
+                                    {{ event.title }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-1">
+                                {{ event.event_date.strftime('%b %d, %Y %I:%M %p') }}
+                            </p>
+                            <p class="text-muted small mb-0">{{ event.location }}</p>
+                        </div>
+                    </div>
+                    {% if not loop.last %}<hr>{% endif %}
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('events_list') }}" class="btn btn-sm btn-outline-info">View All Events</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No upcoming events.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bullhorn text-warning me-2"></i>
+                    Announcements
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if announcements %}
+                    {% for announcement in announcements %}
+                    <div class="mb-3">
+                        <h6 class="mb-1">{{ announcement.title }}</h6>
+                        <p class="text-muted small mb-1">
+                            {{ announcement.created_at.strftime('%b %d, %Y') }}
+                        </p>
+                        <p class="mb-0">{{ announcement.content[:100] }}...</p>
+                    </div>
+                    {% if not loop.last %}<hr>{% endif %}
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('announcements_list') }}" class="btn btn-sm btn-outline-warning">View All</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No announcements.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- Quick Start Guide -->
+        <div class="card mb-4">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-rocket me-2"></i>
+                    Get Started in 3 Steps
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px; font-size: 14px; font-weight: bold;">1</div>
+                    <div>
+                        <h6 class="mb-1">Create Your Profile</h6>
+                        <p class="small text-muted mb-0">Sign up and build your professional profile</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-start mb-3">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px; font-size: 14px; font-weight: bold;">2</div>
+                    <div>
+                        <h6 class="mb-1">Connect & Network</h6>
+                        <p class="small text-muted mb-0">Find and connect with peers and mentors</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-start mb-3">
+                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px; font-size: 14px; font-weight: bold;">3</div>
+                    <div>
+                        <h6 class="mb-1">Explore Opportunities</h6>
+                        <p class="small text-muted mb-0">Discover jobs, events, and learning resources</p>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-play me-1"></i>Start Now
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Stories -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-quote-left text-success me-2"></i>
+                    Success Stories
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="{{ url_for('static', filename='images/default-avatar.png') }}" class="rounded-circle me-2" width="30" height="30" alt="Avatar">
+                        <strong class="small">Sarah M.</strong>
+                    </div>
+                    <p class="small text-muted mb-0">"Found my dream internship through Tukonect's job board. The networking events helped me build confidence!"</p>
+                </div>
+                <hr class="my-3">
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="{{ url_for('static', filename='images/default-avatar.png') }}" class="rounded-circle me-2" width="30" height="30" alt="Avatar">
+                        <strong class="small">Alex K.</strong>
+                    </div>
+                    <p class="small text-muted mb-0">"The study groups I joined here helped me ace my finals. Amazing community!"</p>
+                </div>
+                <hr class="my-3">
+                <div class="mb-0">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="{{ url_for('static', filename='images/default-avatar.png') }}" class="rounded-circle me-2" width="30" height="30" alt="Avatar">
+                        <strong class="small">Maria L.</strong>
+                    </div>
+                    <p class="small text-muted mb-0">"Connected with my current mentor through this platform. Life-changing experience!"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features for Non-Authenticated Users -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-star text-warning me-2"></i>
+                    Why Choose Tukonect?
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="fas fa-users text-primary me-2"></i>Connect</h6>
+                    <p class="small text-muted">Build meaningful connections with students and alumni.</p>
+                </div>
+                <div class="mb-3">
+                    <h6><i class="fas fa-comments text-success me-2"></i>Collaborate</h6>
+                    <p class="small text-muted">Share knowledge and ideas in our discussion forums.</p>
+                </div>
+                <div class="mb-3">
+                    <h6><i class="fas fa-briefcase text-info me-2"></i>Career</h6>
+                    <p class="small text-muted">Discover job opportunities and career guidance.</p>
+                </div>
+                <div class="mb-3">
+                    <h6><i class="fas fa-calendar text-warning me-2"></i>Events</h6>
+                    <p class="small text-muted">Attend networking events and workshops.</p>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('register') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-heart me-1"></i>Join Our Community
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

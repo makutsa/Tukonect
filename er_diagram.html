@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tukonect ER Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .instructions {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .instructions h3 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        .instructions ul {
+            margin: 10px 0;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Tukonect - Entity Relationship Diagram</h1>
+        
+        <div class="mermaid">
+erDiagram
+    USER {
+        int id PK
+        string username UK
+        string email UK
+        string password_hash
+        boolean is_active
+        boolean is_admin
+        datetime date_joined
+    }
+    
+    PROFILE {
+        int id PK
+        int user_id FK
+        string full_name
+        string phone_number
+        text bio
+        string profile_picture
+        string user_type
+        string major
+        string course
+        int graduation_year
+        text skills
+        string location
+        datetime created_at
+        datetime updated_at
+    }
+    
+    CONNECTION {
+        int id PK
+        int requester_id FK
+        int receiver_id FK
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+    
+    MESSAGE {
+        int id PK
+        int sender_id FK
+        int receiver_id FK
+        text content
+        boolean is_read
+        datetime created_at
+    }
+    
+    FORUM {
+        int id PK
+        int author_id FK
+        string title
+        text content
+        datetime created_at
+        datetime updated_at
+    }
+    
+    FORUM_REPLY {
+        int id PK
+        int forum_id FK
+        int user_id FK
+        text content
+        datetime created_at
+    }
+    
+    JOB {
+        int id PK
+        int posted_by_id FK
+        string title
+        text description
+        string company
+        string location
+        string job_type
+        datetime deadline
+        datetime created_at
+        datetime updated_at
+    }
+    
+    JOB_APPLICATION {
+        int id PK
+        int job_id FK
+        int applicant_id FK
+        text cover_letter
+        string status
+        datetime applied_at
+        datetime updated_at
+    }
+    
+    MENTORSHIP {
+        int id PK
+        int mentor_id FK
+        int mentee_id FK
+        string status
+        datetime started_at
+        datetime ended_at
+        datetime created_at
+    }
+    
+    EVENT {
+        int id PK
+        int created_by_id FK
+        string title
+        text description
+        datetime event_date
+        string location
+        datetime created_at
+        datetime updated_at
+    }
+    
+    EVENT_PARTICIPANT {
+        int id PK
+        int event_id FK
+        int user_id FK
+        string status
+        datetime created_at
+    }
+    
+    ANNOUNCEMENT {
+        int id PK
+        int created_by_id FK
+        string title
+        text content
+        string announcement_type
+        datetime created_at
+        datetime updated_at
+    }
+    
+    PASSWORD_RESET_TOKEN {
+        int id PK
+        int user_id FK
+        string token UK
+        datetime expires_at
+        boolean used
+        datetime created_at
+    }
+
+    %% Relationships
+    USER ||--|| PROFILE : "has"
+    USER ||--o{ CONNECTION : "requests"
+    USER ||--o{ CONNECTION : "receives"
+    USER ||--o{ MESSAGE : "sends"
+    USER ||--o{ MESSAGE : "receives"
+    USER ||--o{ FORUM : "authors"
+    USER ||--o{ FORUM_REPLY : "writes"
+    USER ||--o{ JOB : "posts"
+    USER ||--o{ JOB_APPLICATION : "applies"
+    USER ||--o{ MENTORSHIP : "mentors"
+    USER ||--o{ MENTORSHIP : "is_mentored_by"
+    USER ||--o{ EVENT : "creates"
+    USER ||--o{ EVENT_PARTICIPANT : "participates"
+    USER ||--o{ ANNOUNCEMENT : "creates"
+    USER ||--o{ PASSWORD_RESET_TOKEN : "has"
+    
+    FORUM ||--o{ FORUM_REPLY : "has"
+    JOB ||--o{ JOB_APPLICATION : "receives"
+    EVENT ||--o{ EVENT_PARTICIPANT : "has"
+        </div>
+
+        <div class="instructions">
+            <h3>📋 How to Save as Image:</h3>
+            <ul>
+                <li><strong>Method 1:</strong> Right-click on the diagram above and select "Save image as..."</li>
+                <li><strong>Method 2:</strong> Use browser's "Print to PDF" feature and save as PDF</li>
+                <li><strong>Method 3:</strong> Take a screenshot of the diagram area</li>
+                <li><strong>Method 4:</strong> Use online Mermaid tools like <a href="https://mermaid.live/" target="_blank">Mermaid Live Editor</a></li>
+            </ul>
+            
+            <h3>🎯 Database Summary:</h3>
+            <ul>
+                <li><strong>Total Entities:</strong> 11 tables</li>
+                <li><strong>Total Relationships:</strong> 19 relationships</li>
+                <li><strong>Core Features:</strong> User management, Social networking, Job applications, Event management, Messaging, Forums</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            er: {
+                fontSize: 12,
+                fill: '#f9f9f9'
+            }
+        });
+    </script>
+</body>
+</html>

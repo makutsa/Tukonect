@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Tukonect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        {% if user.is_authenticated %}
+        <!-- Welcome Message -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title">
+                    <i class="fas fa-home text-primary me-2"></i>
+                    Welcome back, {{ user.profile.full_name|default:user.username }}!
+                </h2>
+                <p class="card-text">Stay connected with your academic community.</p>
+                
+                <!-- Quick Search -->
+                <div class="mt-3">
+                    <form method="get" action="{% url 'search_users' %}" class="d-flex">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="q" placeholder="Find people to connect with..." aria-label="Search users">
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-2">
+                        <a href="{% url 'search_users' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-filter me-1"></i>Advanced Search
+                        </a>
+                        <a href="{% url 'connections' %}" class="btn btn-sm btn-outline-info ms-2">
+                            <i class="fas fa-users me-1"></i>My Connections
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Forum Posts -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-comments text-primary me-2"></i>
+                    Recent Forum Discussions
+                </h5>
+                <a href="{% url 'forum_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_forums %}
+                    {% for forum in recent_forums %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <img src="{% if forum.author.profile.profile_picture %}{{ forum.author.profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                 class="rounded-circle" width="40" height="40" alt="Avatar">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">
+                                <a href="{% url 'forum_detail' forum.id %}" class="text-decoration-none">
+                                    {{ forum.title }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-1">
+                                by {{ forum.author.username }} • {{ forum.created_at|timesince }} ago
+                            </p>
+                            <p class="mb-0">{{ forum.content|truncatewords:20 }}</p>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent forum posts.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Jobs -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-briefcase text-success me-2"></i>
+                    Latest Job Opportunities
+                </h5>
+                <a href="{% url 'jobs_list' %}" class="btn btn-sm btn-outline-success">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_jobs %}
+                    {% for job in recent_jobs %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-briefcase text-success fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">
+                                <a href="{% url 'job_detail' job.id %}" class="text-decoration-none">
+                                    {{ job.title }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-1">
+                                {{ job.company }} • {{ job.location }} • {{ job.job_type|title }}
+                            </p>
+                            <p class="mb-0">{{ job.description|truncatewords:15 }}</p>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent job postings.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Landing Page for Non-Authenticated Users -->
+        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-graduation-cap me-3"></i>
+                Welcome to Tukonect
+            </h1>
+            <p class="lead">Connect with fellow students, share knowledge, find opportunities, and build your professional network.</p>
+            <hr class="my-4">
+            <p>Join our community of students and alumni to:</p>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-check me-2"></i>Connect with peers and mentors</li>
+                <li><i class="fas fa-check me-2"></i>Share knowledge in forums</li>
+                <li><i class="fas fa-check me-2"></i>Find job opportunities</li>
+                <li><i class="fas fa-check me-2"></i>Attend networking events</li>
+                <li><i class="fas fa-check me-2"></i>Build your professional profile</li>
+            </ul>
+            <a class="btn btn-light btn-lg" href="{% url 'register' %}" role="button">
+                <i class="fas fa-user-plus me-2"></i>Get Started
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        {% if user.is_authenticated %}
+        <!-- Upcoming Events -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar text-info me-2"></i>
+                    Upcoming Events
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_events %}
+                    {% for event in upcoming_events %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-calendar-alt text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">
+                                <a href="{% url 'event_detail' event.id %}" class="text-decoration-none">
+                                    {{ event.title }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-1">
+                                {{ event.event_date|date:"M d, Y g:i A" }}
+                            </p>
+                            <p class="text-muted small mb-0">{{ event.location }}</p>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'events_list' %}" class="btn btn-sm btn-outline-info">View All Events</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No upcoming events.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bullhorn text-warning me-2"></i>
+                    Announcements
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if announcements %}
+                    {% for announcement in announcements %}
+                    <div class="mb-3">
+                        <h6 class="mb-1">{{ announcement.title }}</h6>
+                        <p class="text-muted small mb-1">
+                            {{ announcement.created_at|timesince }} ago
+                        </p>
+                        <p class="mb-0">{{ announcement.content|truncatewords:20 }}</p>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'announcements_list' %}" class="btn btn-sm btn-outline-warning">View All</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No announcements.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- Features for Non-Authenticated Users -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-star text-warning me-2"></i>
+                    Why Choose Tukonect?
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="fas fa-users text-primary me-2"></i>Connect</h6>
+                    <p class="small text-muted">Build meaningful connections with students and alumni.</p>
+                </div>
+                <div class="mb-3">
+                    <h6><i class="fas fa-comments text-success me-2"></i>Collaborate</h6>
+                    <p class="small text-muted">Share knowledge and ideas in our discussion forums.</p>
+                </div>
+                <div class="mb-3">
+                    <h6><i class="fas fa-briefcase text-info me-2"></i>Career</h6>
+                    <p class="small text-muted">Discover job opportunities and career guidance.</p>
+                </div>
+                <div class="mb-3">
+                    <h6><i class="fas fa-calendar text-warning me-2"></i>Events</h6>
+                    <p class="small text-muted">Attend networking events and workshops.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

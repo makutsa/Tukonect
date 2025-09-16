@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block title %}Events - Tukonect{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section bg-gradient-info text-white rounded-4 mb-2 p-1">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold mb-3">
+                <i class="fas fa-calendar-alt me-3"></i>Upcoming Events
+            </h1>
+            <p class="lead mb-4">
+                Join exciting events, network with peers, and expand your horizons. 
+                Discover workshops, meetups, and social gatherings happening around you.
+            </p>
+            <div class="d-flex gap-3 flex-wrap">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('create_event') }}" class="btn btn-light btn-lg px-4">
+                    <i class="fas fa-plus me-2"></i>Create Event
+                </a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-light btn-lg px-4">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login to Create Events
+                </a>
+                {% endif %}
+                <a href="#events-list" class="btn btn-outline-light btn-lg px-4">
+                    <i class="fas fa-search me-2"></i>Browse Events
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center">
+            <div class="hero-stats">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="stat-card bg-white bg-opacity-20 rounded-3 p-3">
+                            <h3 class="mb-1">{{ events.total if events else 0 }}</h3>
+                            <small>Total Events</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card bg-white bg-opacity-20 rounded-3 p-3">
+                            <h3 class="mb-1">{{ events.items|selectattr('event_date', 'ge', moment)|list|length if events else 0 }}</h3>
+                            <small>Upcoming</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Events List Section -->
+<div id="events-list">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0">
+            <i class="fas fa-list text-info me-2"></i>Event Calendar
+        </h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-info btn-sm" onclick="filterEvents('all')">
+                <i class="fas fa-th me-1"></i>All Events
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="filterEvents('upcoming')">
+                <i class="fas fa-clock me-1"></i>Upcoming
+            </button>
+            <button class="btn btn-outline-warning btn-sm" onclick="filterEvents('this-week')">
+                <i class="fas fa-calendar-week me-1"></i>This Week
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if events.items %}
+    <div class="row g-3">
+        {% for event in events.items %}
+        <div class="col-lg-6 event-item" data-event-date="{{ event.event_date.isoformat() }}">
+            <div class="card h-100 event-card shadow-sm border-0 hover-lift">
+                <div class="card-header bg-gradient-light border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="event-date-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                <div class="text-center">
+                                    <div class="fw-bold">{{ event.event_date.strftime('%d') }}</div>
+                                    <small>{{ event.event_date.strftime('%b') }}</small>
+                                </div>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ event.event_date.strftime('%A') }}</h6>
+                                <small class="text-muted">{{ event.event_date.strftime('%I:%M %p') }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="shareEvent({{ event.id }})">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="bookmarkEvent({{ event.id }})">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-1">
+                    <h5 class="card-title mb-3">
+                        <a href="{{ url_for('event_detail', event_id=event.id) }}" class="text-decoration-none text-dark fw-bold">
+                            {{ event.title }}
+                        </a>
+                    </h5>
+                    
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="text-muted">
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i>{{ event.location }}
+                        </span>
+                        <span class="text-muted">
+                            <i class="fas fa-users text-info me-1"></i>{{ event.get_participant_count() }} participants
+                        </span>
+                    </div>
+                    
+                    <p class="card-text text-muted mb-4">
+                        {{ event.description[:120] }}{% if event.description|length > 120 %}...{% endif %}
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-user me-2"></i>
+                            <small>Created by {{ event.created_by.username }}</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-info btn-sm px-3">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            {% if current_user.is_authenticated %}
+                                {% if current_user.id == event.created_by_id %}
+                                    <a href="{{ url_for('delete_event', event_id=event.id) }}" class="btn btn-outline-danger btn-sm" 
+                                       onclick="return confirm('Are you sure you want to delete this event? This action cannot be undone.')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                {% elif event.user_participation %}
+                                    <a href="{{ url_for('leave_event', event_id=event.id) }}" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-times me-1"></i>Leave
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('join_event', event_id=event.id) }}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-plus me-1"></i>Join
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if events.pages > 1 %}
+    <nav aria-label="Events pagination">
+        <ul class="pagination justify-content-center">
+            {% if events.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('events_list', page=events.prev_num) }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in events.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != events.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('events_list', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if events.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('events_list', page=events.next_num) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+{% else %}
+    <div class="text-center py-5">
+        <div class="empty-state">
+            <i class="fas fa-calendar-alt fa-4x text-muted mb-4"></i>
+            <h3 class="text-muted mb-3">No Events Scheduled</h3>
+            <p class="text-muted mb-4 lead">Be the first to create an event and bring the community together!</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('create_event') }}" class="btn btn-info btn-lg px-4">
+                <i class="fas fa-plus me-2"></i>Create First Event
+            </a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-info btn-lg px-4">
+                <i class="fas fa-sign-in-alt me-2"></i>Login to Create Events
+            </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<!-- JavaScript for filtering -->
+<script>
+function filterEvents(type) {
+    const eventItems = document.querySelectorAll('.event-item');
+    const buttons = document.querySelectorAll('[onclick^="filterEvents"]');
+    const now = new Date();
+    
+    // Update button states
+    buttons.forEach(btn => {
+        btn.classList.remove('btn-info');
+        btn.classList.add('btn-outline-info');
+    });
+    
+    if (type === 'all') {
+        eventItems.forEach(item => item.style.display = 'block');
+        buttons[0].classList.remove('btn-outline-info');
+        buttons[0].classList.add('btn-info');
+    } else if (type === 'upcoming') {
+        eventItems.forEach(item => {
+            const eventDate = new Date(item.dataset.eventDate);
+            if (eventDate >= now) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        buttons[1].classList.remove('btn-outline-info');
+        buttons[1].classList.add('btn-info');
+    } else if (type === 'this-week') {
+        const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        eventItems.forEach(item => {
+            const eventDate = new Date(item.dataset.eventDate);
+            if (eventDate >= now && eventDate <= weekFromNow) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        buttons[2].classList.remove('btn-outline-info');
+        buttons[2].classList.add('btn-info');
+    }
+}
+
+function shareEvent(eventId) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Check out this event!',
+            text: 'I found an interesting event on Tukonect',
+            url: window.location.origin + '/event/' + eventId
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.origin + '/event/' + eventId);
+        alert('Event link copied to clipboard!');
+    }
+}
+
+function bookmarkEvent(eventId) {
+    alert('Event bookmarked! (Feature coming soon)');
+}
+</script>
+{% endblock %}

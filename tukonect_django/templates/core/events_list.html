@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Events - Tukonect{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-calendar text-primary me-2"></i>Upcoming Events</h2>
+    {% if user.is_authenticated %}
+    <a href="{% url 'create_event' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Create Event
+    </a>
+    {% endif %}
+</div>
+
+{% if page_obj %}
+    {% for event in page_obj %}
+    <div class="card mb-3 event-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <h5 class="card-title">
+                        <a href="{% url 'event_detail' event.id %}" class="text-decoration-none">
+                            {{ event.title }}
+                        </a>
+                    </h5>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-calendar-alt me-1"></i>{{ event.event_date|date:"M d, Y \a\t g:i A" }}
+                        <i class="fas fa-map-marker-alt me-1 ms-3"></i>{{ event.location }}
+                    </p>
+                    <p class="card-text">{{ event.description|truncatewords:30 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-users me-1"></i>{{ event.get_participant_count }} participants
+                            <i class="fas fa-user me-1 ms-3"></i>Created by {{ event.created_by.get_full_name|default:event.created_by.username }}
+                        </small>
+                        <div>
+                            <a href="{% url 'event_detail' event.id %}" class="btn btn-sm btn-outline-primary">
+                                View Details
+                            </a>
+                            {% if user.is_authenticated %}
+                                {% if event.user_participation %}
+                                    <a href="{% url 'leave_event' event.id %}" class="btn btn-sm btn-outline-danger">
+                                        Leave Event
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'join_event' event.id %}" class="btn btn-sm btn-success">
+                                        Join Event
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Events pagination">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No events scheduled</h5>
+            <p class="text-muted">Be the first to create an event!</p>
+            {% if user.is_authenticated %}
+            <a href="{% url 'create_event' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create First Event
+            </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

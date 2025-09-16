@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Forum{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-comments me-2"></i>Forum Discussions</h2>
+    {% if user.is_authenticated %}
+    <a href="{% url 'create_forum_post' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New Post
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% for forum in page_obj %}
+    <div class="col-12 mb-3">
+        <div class="card forum-post">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title">
+                            <a href="{% url 'forum_detail' forum.id %}" class="text-decoration-none">
+                                {{ forum.title }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted">{{ forum.content|truncatewords:30 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i>{{ forum.author.get_full_name|default:forum.author.username }}
+                                <i class="fas fa-clock me-1 ms-3"></i>{{ forum.created_at|timesince }} ago
+                            </small>
+                            <span class="badge bg-primary">{{ forum.get_reply_count }} replies</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card text-center py-5">
+            <div class="card-body">
+                <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                <h5 class="card-title">No forum posts yet</h5>
+                <p class="card-text text-muted">Be the first to start a discussion!</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'create_forum_post' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Create First Post
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav aria-label="Forum pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

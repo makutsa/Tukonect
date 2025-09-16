@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load search_extras %}
+
+{% block title %}Search Users - Tukonect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-search text-primary me-2"></i>
+                Search All Users
+            </h2>
+            <a href="{% url 'connections' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Connections
+            </a>
+        </div>
+
+        <!-- Search Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Search Results:</strong> All users are displayed regardless of connection status. 
+                    Connection status is shown with different colored buttons for each user.
+                </div>
+                <form method="get" action="{% url 'search_users' %}" id="searchForm">
+                    <!-- Basic Search -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="q" class="form-label">Name, Username, or Email</label>
+                            <input type="text" class="form-control" id="q" name="q" value="{{ query }}" placeholder="Enter name, username, or email">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="user_type" class="form-label">User Type</label>
+                            <select class="form-select" id="user_type" name="user_type">
+                                <option value="">All Types</option>
+                                {% for choice_value, choice_label in user_type_choices %}
+                                    <option value="{{ choice_value }}" {% if user_type == choice_value %}selected{% endif %}>{{ choice_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort_by" class="form-label">Sort By</label>
+                            <select class="form-select" id="sort_by" name="sort_by">
+                                <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Newest First</option>
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                                <option value="username" {% if sort_by == 'username' %}selected{% endif %}>Username (A-Z)</option>
+                                <option value="user_type" {% if sort_by == 'user_type' %}selected{% endif %}>User Type</option>
+                                <option value="graduation_year" {% if sort_by == 'graduation_year' %}selected{% endif %}>Graduation Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Filters -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label for="major" class="form-label">Major</label>
+                            <input type="text" class="form-control" id="major" name="major" value="{{ major }}" placeholder="Enter major" list="majorsList">
+                            <datalist id="majorsList">
+                                {% for major_option in all_majors %}
+                                    <option value="{{ major_option }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="course" class="form-label">Course</label>
+                            <input type="text" class="form-control" id="course" name="course" value="{{ course }}" placeholder="Enter course" list="coursesList">
+                            <datalist id="coursesList">
+                                {% for course_option in all_courses %}
+                                    <option value="{{ course_option }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="graduation_year" class="form-label">Graduation Year</label>
+                            <input type="number" class="form-control" id="graduation_year" name="graduation_year" value="{{ graduation_year }}" placeholder="e.g., 2024" min="2000" max="2030">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" value="{{ location }}" placeholder="Enter location" list="locationsList">
+                            <datalist id="locationsList">
+                                {% for location_option in all_locations %}
+                                    <option value="{{ location_option }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="skills" class="form-label">Skills</label>
+                            <input type="text" class="form-control" id="skills" name="skills" value="{{ skills }}" placeholder="e.g., Python, React">
+                            <small class="form-text text-muted">Comma-separated</small>
+                        </div>
+                    </div>
+
+                    <!-- Search Buttons -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search me-1"></i>Search
+                                </button>
+                            <a href="{% url 'search_users' %}" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-refresh me-1"></i>Clear All
+                            </a>
+                            <button type="button" class="btn btn-outline-info" onclick="toggleAdvancedFilters()">
+                                <i class="fas fa-filter me-1"></i>Toggle Advanced
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Search Results ({{ page_obj.paginator.count }} found)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if has_search_criteria %}
+                    {% if page_obj %}
+                    <div class="row">
+                        {% for profile in page_obj %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <img src="{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                             class="rounded-circle" width="80" height="80" alt="Profile Picture">
+                                    </div>
+                                    <h6 class="card-title mb-1">
+                                        <a href="{% url 'profile' profile.user.id %}" class="text-decoration-none">
+                                            {{ profile.full_name|default:profile.user.username }}
+                                        </a>
+                                    </h6>
+                                    <p class="text-muted small mb-2">
+                                        <span class="badge bg-primary">{{ profile.user_type|title }}</span>
+                                        {% if profile.major %}
+                                            <span class="badge bg-secondary">{{ profile.major }}</span>
+                                        {% endif %}
+                                    </p>
+                                    {% if profile.course %}
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-graduation-cap me-1"></i>{{ profile.course }}
+                                        </p>
+                                    {% endif %}
+                                    {% if profile.graduation_year %}
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-calendar me-1"></i>Class of {{ profile.graduation_year }}
+                                        </p>
+                                    {% endif %}
+                                    {% if profile.location %}
+                                        <p class="text-muted small mb-2">
+                                            <i class="fas fa-map-marker-alt me-1"></i>{{ profile.location }}
+                                        </p>
+                                    {% endif %}
+                                    {% if profile.skills %}
+                                        <div class="mb-2">
+                                            {% for skill in profile.get_skills_list|slice:":3" %}
+                                                <span class="badge bg-light text-dark me-1">{{ skill|truncatechars:15 }}</span>
+                                            {% endfor %}
+                                            {% if profile.get_skills_list|length > 3 %}
+                                                <span class="text-muted small">+{{ profile.get_skills_list|length|add:"-3" }} more</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                    {% if profile.bio %}
+                                    <p class="text-muted small mb-3">
+                                            {{ profile.bio|truncatewords:12 }}
+                                        </p>
+                                        {% endif %}
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'profile' profile.user.id %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-user me-1"></i>View Profile
+                                        </a>
+                                        
+                                        <!-- Connection Status Buttons -->
+                                        {% if user.is_authenticated %}
+                                            {% with connection_status=user_connections|lookup:profile.user.id %}
+                                                {% if connection_status == 'connected' %}
+                                                    <button class="btn btn-success btn-sm" disabled>
+                                                        <i class="fas fa-user-check me-1"></i>Connected
+                                                    </button>
+                                                    <a href="{% url 'message_detail' profile.user.id %}" class="btn btn-outline-info btn-sm">
+                                                        <i class="fas fa-envelope me-1"></i>Message
+                                                    </a>
+                                                {% elif connection_status == 'pending_sent' %}
+                                                    <button class="btn btn-warning btn-sm" disabled>
+                                                        <i class="fas fa-clock me-1"></i>Request Sent
+                                                    </button>
+                                                    <a href="{% url 'message_detail' profile.user.id %}" class="btn btn-outline-info btn-sm">
+                                                        <i class="fas fa-envelope me-1"></i>Message
+                                                    </a>
+                                                {% elif connection_status == 'pending_received' %}
+                                                    <div class="d-flex gap-1">
+                                                        <a href="{% url 'accept_connection' profile.user.id %}" class="btn btn-success btn-sm flex-fill">
+                                                            <i class="fas fa-check me-1"></i>Accept
+                                                        </a>
+                                                        <a href="{% url 'reject_connection' profile.user.id %}" class="btn btn-outline-danger btn-sm flex-fill">
+                                                            <i class="fas fa-times me-1"></i>Reject
+                                                        </a>
+                                                    </div>
+                                                {% elif connection_status == 'rejected' %}
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                        <i class="fas fa-user-times me-1"></i>Request Rejected
+                                                    </button>
+                                                {% elif connection_status == 'blocked' %}
+                                                    <button class="btn btn-outline-danger btn-sm" disabled>
+                                                        <i class="fas fa-ban me-1"></i>Blocked
+                                                    </button>
+                                                {% else %}
+                                                    <a href="{% url 'send_connection_request' profile.user.id %}" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-user-plus me-1"></i>Send Request
+                                                    </a>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% else %}
+                                            <a href="{% url 'login' %}" class="btn btn-success btn-sm">
+                                                <i class="fas fa-sign-in-alt me-1"></i>Login to Connect
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="card-footer text-muted small text-center">
+                                    Joined {{ profile.created_at|timesince }} ago
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Search results pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if major %}major={{ major }}&{% endif %}{% if user_type %}user_type={{ user_type }}&{% endif %}{% if graduation_year %}graduation_year={{ graduation_year }}&{% endif %}page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if major %}major={{ major }}&{% endif %}{% if user_type %}user_type={{ user_type }}&{% endif %}{% if graduation_year %}graduation_year={{ graduation_year }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if major %}major={{ major }}&{% endif %}{% if user_type %}user_type={{ user_type }}&{% endif %}{% if graduation_year %}graduation_year={{ graduation_year }}&{% endif %}page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if major %}major={{ major }}&{% endif %}{% if user_type %}user_type={{ user_type }}&{% endif %}{% if graduation_year %}graduation_year={{ graduation_year }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No users found</h5>
+                            <p class="text-muted">Try adjusting your search criteria to find more people.</p>
+                            <a href="{% url 'search_users' %}" class="btn btn-primary">
+                                <i class="fas fa-refresh me-1"></i>Clear Search
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Start Your Search</h5>
+                        <p class="text-muted">Use the search form above to find people to connect with.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for enhanced search functionality -->
+<script>
+function toggleAdvancedFilters() {
+    const advancedFilters = document.querySelector('.row:nth-of-type(2)');
+    const toggleBtn = document.querySelector('button[onclick="toggleAdvancedFilters()"]');
+    
+    if (advancedFilters.style.display === 'none') {
+        advancedFilters.style.display = 'flex';
+        toggleBtn.innerHTML = '<i class="fas fa-filter me-1"></i>Hide Advanced';
+        toggleBtn.classList.remove('btn-outline-info');
+        toggleBtn.classList.add('btn-info');
+    } else {
+        advancedFilters.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-filter me-1"></i>Show Advanced';
+        toggleBtn.classList.remove('btn-info');
+        toggleBtn.classList.add('btn-outline-info');
+    }
+}
+
+// Initialize advanced filters as hidden by default
+document.addEventListener('DOMContentLoaded', function() {
+    const advancedFilters = document.querySelector('.row:nth-of-type(2)');
+    if (advancedFilters) {
+        advancedFilters.style.display = 'none';
+    }
+});
+
+// Auto-submit form when sort_by changes
+document.getElementById('sort_by').addEventListener('change', function() {
+    document.getElementById('searchForm').submit();
+});
+
+// Add loading state to search button
+document.getElementById('searchForm').addEventListener('submit', function() {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Searching...';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}
+
+

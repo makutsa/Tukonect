@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Message with {{ other_user.username }} - Tukonect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Message Header -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'messages' %}" class="btn btn-outline-secondary me-3">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <div class="flex-shrink-0 me-3">
+                        <img src="{% if other_user.profile.profile_picture %}{{ other_user.profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                             class="rounded-circle" width="50" height="50" alt="Avatar">
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">
+                            <a href="{% url 'profile' other_user.id %}" class="text-decoration-none">
+                                {{ other_user.profile.full_name|default:other_user.username }}
+                            </a>
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            {% if other_user.profile.user_type %}
+                                {{ other_user.profile.user_type|title }}
+                            {% else %}
+                                Student
+                            {% endif %}
+                            {% if other_user.profile.major %}
+                                • {{ other_user.profile.major }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="{% url 'profile' other_user.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user me-1"></i>View Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="card">
+            <div class="card-body" style="height: 500px; overflow-y: auto;" id="messagesContainer">
+                {% if messages %}
+                    <div class="messages-list">
+                        {% for message in messages %}
+                        <div class="message-item mb-3 {% if message.sender == user %}text-end{% else %}text-start{% endif %}">
+                            <div class="d-flex {% if message.sender == user %}justify-content-end{% else %}justify-content-start{% endif %}">
+                                {% if message.sender != user %}
+                                <div class="flex-shrink-0 me-2">
+                                    <img src="{% if message.sender.profile.profile_picture %}{{ message.sender.profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                         class="rounded-circle" width="32" height="32" alt="Avatar">
+                                </div>
+                                {% endif %}
+                                <div class="message-bubble {% if message.sender == user %}bg-primary text-white{% else %}bg-light{% endif %} rounded p-3" style="max-width: 70%;">
+                                    <p class="mb-1">{{ message.content }}</p>
+                                    <small class="{% if message.sender == user %}text-white-50{% else %}text-muted{% endif %}">
+                                        {{ message.created_at|date:"M d, Y g:i A" }}
+                                        {% if message.sender == user and message.is_read %}
+                                            <i class="fas fa-check-double ms-1"></i>
+                                        {% elif message.sender == user %}
+                                            <i class="fas fa-check ms-1"></i>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                {% if message.sender == user %}
+                                <div class="flex-shrink-0 ms-2">
+                                    <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                         class="rounded-circle" width="32" height="32" alt="Avatar">
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No messages yet</h5>
+                        <p class="text-muted">Start the conversation by sending a message below.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Message Form -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <form method="post" id="messageForm">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <textarea class="form-control" name="content" id="messageContent" 
+                                  placeholder="Type your message..." rows="3" required></textarea>
+                        <button class="btn btn-primary" type="submit" id="sendButton">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-scroll to bottom of messages
+    const messagesContainer = document.getElementById('messagesContainer');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Auto-resize textarea
+    const messageContent = document.getElementById('messageContent');
+    messageContent.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+    });
+    
+    // Handle form submission
+    const messageForm = document.getElementById('messageForm');
+    const sendButton = document.getElementById('sendButton');
+    
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const content = messageContent.value.trim();
+        if (!content) return;
+        
+        // Disable send button
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        // Submit form
+        fetch(window.location.href, {
+            method: 'POST',
+            body: new FormData(this),
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Reload page to show new message
+                window.location.reload();
+            } else {
+                throw new Error('Failed to send message');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to send message. Please try again.');
+            sendButton.disabled = false;
+            sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        });
+    });
+    
+    // Auto-refresh messages every 30 seconds
+    setInterval(function() {
+        // This would typically make an AJAX call to check for new messages
+        // For now, we'll just reload the page
+        // In a real implementation, you would:
+        // 1. Make an AJAX call to get new messages
+        // 2. Append new messages to the DOM
+        // 3. Update the UI without full page reload
+    }, 30000);
+});
+</script>
+{% endblock %}

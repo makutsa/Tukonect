@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ forum.title }} - Tukonect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h2 class="card-title">{{ forum.title }}</h2>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-user me-1"></i>{{ forum.author.get_full_name|default:forum.author.username }}
+                            <i class="fas fa-clock me-1 ms-3"></i>{{ forum.created_at|timesince }} ago
+                        </p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="forum-content">
+                    {{ forum.content|linebreaks }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Replies -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-reply me-2"></i>Replies ({{ replies|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if replies %}
+                    {% for reply in replies %}
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <img src="{% if reply.user.profile.profile_picture %}{{ reply.user.profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                 class="rounded-circle" width="40" height="40" alt="Avatar">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="card-title mb-1">
+                                                <a href="{% url 'profile' reply.user.id %}" class="text-decoration-none">
+                                                    {{ reply.user.get_full_name|default:reply.user.username }}
+                                                </a>
+                                            </h6>
+                                            <small class="text-muted">{{ reply.created_at|timesince }} ago</small>
+                                        </div>
+                                    </div>
+                                    <p class="card-text mt-2">{{ reply.content|linebreaks }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">No replies yet. Be the first to reply!</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Reply Form -->
+        {% if user.is_authenticated %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-reply me-2"></i>Add a Reply
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.content }}
+                        {% if form.content.errors %}
+                            <div class="text-danger small">{{ form.content.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>Post Reply
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <p class="text-muted">Please <a href="{% url 'login' %}">login</a> to reply to this post.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Post Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Author:</strong><br>
+                    <a href="{% url 'profile' forum.author.id %}" class="text-decoration-none">
+                        {{ forum.author.get_full_name|default:forum.author.username }}
+                    </a>
+                </div>
+                <div class="mb-3">
+                    <strong>Posted:</strong><br>
+                    {{ forum.created_at|date:"F d, Y \a\t g:i A" }}
+                </div>
+                <div class="mb-3">
+                    <strong>Replies:</strong><br>
+                    {{ replies|length }}
+                </div>
+                <div class="mb-3">
+                    <strong>Last Updated:</strong><br>
+                    {{ forum.updated_at|date:"F d, Y \a\t g:i A" }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-share-alt me-2"></i>Share This Post
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-outline-primary" onclick="shareForumOnLinkedIn()">
+                        <i class="fab fa-linkedin me-1"></i>Share on LinkedIn
+                    </a>
+                    <a href="#" class="btn btn-outline-dark" onclick="shareForumOnTwitter()">
+                        <i class="fab fa-x-twitter me-1"></i>Share on X (Twitter)
+                    </a>
+                    <a href="#" class="btn btn-outline-success" onclick="shareForumViaEmail()">
+                        <i class="fas fa-envelope me-1"></i>Email to Friend
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary" onclick="copyForumLink()">
+                        <i class="fas fa-copy me-1"></i>Copy Link
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'forum_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Forum
+    </a>
+</div>
+
+<!-- JavaScript for forum sharing functionality -->
+<script>
+// Forum sharing functions
+function shareForumOnLinkedIn() {
+    const forumTitle = '{{ forum.title|escapejs }}';
+    const author = '{{ forum.author.username|escapejs }}';
+    const url = window.location.href;
+    
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+    window.open(linkedInUrl, '_blank', 'width=600,height=400');
+}
+
+function shareForumOnTwitter() {
+    const forumTitle = '{{ forum.title|escapejs }}';
+    const author = '{{ forum.author.username|escapejs }}';
+    const url = window.location.href;
+    const text = `Check out this discussion on Tukonect: "${forumTitle}" by ${author}`;
+    
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=discussion,tukonect,community`;
+    window.open(twitterUrl, '_blank', 'width=600,height=400');
+}
+
+function shareForumViaEmail() {
+    const forumTitle = '{{ forum.title|escapejs }}';
+    const author = '{{ forum.author.username|escapejs }}';
+    const url = window.location.href;
+    const subject = `Forum Discussion: ${forumTitle}`;
+    const body = `Hi,\n\nI found this interesting discussion on Tukonect that might interest you:\n\n"${forumTitle}" by ${author}\n\nCheck it out here: ${url}\n\nBest regards!`;
+    
+    const emailUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = emailUrl;
+}
+
+function copyForumLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(function() {
+        // Show success feedback
+        const copyBtn = document.querySelector('a[onclick="copyForumLink()"]');
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+        copyBtn.classList.remove('btn-outline-secondary');
+        copyBtn.classList.add('btn-success');
+        
+        setTimeout(function() {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.remove('btn-success');
+            copyBtn.classList.add('btn-outline-secondary');
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Could not copy link. Please copy manually: ' + url);
+    });
+}
+
+// Add loading state to share buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const shareButtons = document.querySelectorAll('.card-body a[onclick^="share"]');
+    shareButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Add a small delay to show the click effect
+            this.style.opacity = '0.7';
+            setTimeout(() => {
+                this.style.opacity = '1';
+            }, 200);
+        });
+    });
+});
+</script>
+{% endblock %}

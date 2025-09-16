@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Announcement - Tukonect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4><i class="fas fa-bullhorn me-2"></i>Create New Announcement</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Announcement Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="announcement_type" class="form-label">Announcement Type</label>
+                        <select class="form-select" id="announcement_type" name="announcement_type">
+                            <option value="general">General</option>
+                            <option value="important">Important</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="update">Update</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Announcement Content</label>
+                        <textarea class="form-control" id="content" name="content" rows="8" required></textarea>
+                        <div class="form-text">Use clear and concise language. This will be visible to all users.</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-bullhorn me-2"></i>Create Announcement
+                        </button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('announcements_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Announcements
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
